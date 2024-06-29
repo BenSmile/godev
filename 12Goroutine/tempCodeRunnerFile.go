@@ -1,0 +1,5 @@
+go fetchResource()
+	// go fetchResource()
+	// go fetchResource()
+	// go fetchResource()
+	// go fetchResource()
