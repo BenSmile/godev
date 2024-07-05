@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bensmile/hotel-reservation/types"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -15,12 +16,14 @@ type RoomStore interface {
 type MongoRoomStore struct {
 	client     *mongo.Client
 	collection *mongo.Collection
+	HotelStore
 }
 
-func NewMongoRoomStore(client *mongo.Client, dbName string) *MongoRoomStore {
+func NewMongoRoomStore(client *mongo.Client, hotelStore HotelStore) *MongoRoomStore {
 	return &MongoRoomStore{
 		client:     client,
-		collection: client.Database(dbName).Collection("rooms"),
+		collection: client.Database(DBNAME).Collection("rooms"),
+		HotelStore: hotelStore,
 	}
 }
 
@@ -32,6 +35,13 @@ func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*typ
 	room.ID = resp.InsertedID.(primitive.ObjectID)
 
 	//update the hotel with this room id
+
+	filter := bson.M{"_id": room.HotelID}
+	updateRomm := bson.M{"$push": bson.M{"rooms": room.ID}}
+
+	if err := s.HotelStore.UpdateHotel(ctx, filter, updateRomm); err != nil {
+		return nil, err
+	}
 
 	return room, nil
 }

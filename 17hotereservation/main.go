@@ -12,11 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	userCollection  = "users"
-	hotelCollection = "hotels"
-)
-
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
 		return c.JSON(map[string]string{
@@ -29,8 +24,6 @@ func main() {
 
 	listenAddr := flag.String("listenAddr", ":3100", "The listen address of the api server")
 	flag.Parse()
-	app := fiber.New(config)
-	apiV1 := app.Group("/api/v1")
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DB_URI))
 
@@ -38,13 +31,21 @@ func main() {
 		log.Fatal(err)
 	}
 	// handler initialization
-	userHandler := api.NewUserHandler(db.NewMongoUserStore(client, db.DBNAME))
+	var (
+		userHandler  = api.NewUserHandler(db.NewMongoUserStore(client, db.DBNAME))
+		hotelStore   = db.NewMongoHotelStore(client)
+		roomStore    = db.NewMongoRoomStore(client, hotelStore)
+		hotelHandler = api.NewHotelHandler(hotelStore, roomStore)
+		app          = fiber.New(config)
+		apiV1        = app.Group("/api/v1")
+	)
 
 	apiV1.Get("users", userHandler.HandlerGetUsers)
 	apiV1.Get("users/:id", userHandler.HandlerGetUserByID)
 	apiV1.Post("users", userHandler.HandlerCreateUser)
 	apiV1.Put("users/:id", userHandler.HandlerUpdateUser)
 	apiV1.Delete("users/:id", userHandler.HandlerDeleteuser)
+	apiV1.Get("hotels", hotelHandler.HandleGetHotels)
 	app.Get("/", handleHome)
 	app.Listen(*listenAddr)
 
