@@ -40,12 +40,17 @@ func main() {
 		apiV1        = app.Group("/api/v1")
 	)
 
+	// users
 	apiV1.Get("users", userHandler.HandlerGetUsers)
 	apiV1.Get("users/:id", userHandler.HandlerGetUserByID)
 	apiV1.Post("users", userHandler.HandlerCreateUser)
 	apiV1.Put("users/:id", userHandler.HandlerUpdateUser)
 	apiV1.Delete("users/:id", userHandler.HandlerDeleteuser)
+
+	// hotels
 	apiV1.Get("hotels", hotelHandler.HandleGetHotels)
+	apiV1.Get("hotels/:id/rooms", hotelHandler.HandleGetRoomByHotel)
+
 	app.Get("/", handleHome)
 	app.Listen(*listenAddr)
 
