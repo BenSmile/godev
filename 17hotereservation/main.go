@@ -15,7 +15,7 @@ import (
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
 		return c.JSON(map[string]string{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 	},
 }
@@ -32,10 +32,16 @@ func main() {
 	}
 	// handler initialization
 	var (
-		userHandler  = api.NewUserHandler(db.NewMongoUserStore(client, db.DBNAME))
-		hotelStore   = db.NewMongoHotelStore(client)
-		roomStore    = db.NewMongoRoomStore(client, hotelStore)
-		hotelHandler = api.NewHotelHandler(hotelStore, roomStore)
+		userStore   = db.NewMongoUserStore(client)
+		userHandler = api.NewUserHandler(userStore)
+		hotelStore  = db.NewMongoHotelStore(client)
+		roomStore   = db.NewMongoRoomStore(client, hotelStore)
+		store       = db.Store{
+			Hotel: hotelStore,
+			User:  userStore,
+			Room:  roomStore,
+		}
+		hotelHandler = api.NewHotelHandler(&store)
 		app          = fiber.New(config)
 		apiV1        = app.Group("/api/v1")
 	)
@@ -50,6 +56,7 @@ func main() {
 	// hotels
 	apiV1.Get("hotels", hotelHandler.HandleGetHotels)
 	apiV1.Get("hotels/:id/rooms", hotelHandler.HandleGetRoomByHotel)
+	apiV1.Get("hotels/:id", hotelHandler.HandleGetHotelById)
 
 	app.Get("/", handleHome)
 	app.Listen(*listenAddr)
