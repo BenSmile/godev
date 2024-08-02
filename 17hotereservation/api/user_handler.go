@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/bensmile/hotel-reservation/db"
 	"github.com/bensmile/hotel-reservation/types"
@@ -25,6 +26,23 @@ func (h *UserHandler) HandlerGetUsers(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(users)
+}
+
+func (h *UserHandler) HandleLogin(c *fiber.Ctx) error {
+	type AuthParams struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var authParams AuthParams
+
+	if err := c.BodyParser(&authParams); err != nil {
+		return err
+	}
+
+	fmt.Println("body : ", authParams)
+
+	return nil
 }
 
 func (h *UserHandler) HandlerDeleteuser(c *fiber.Ctx) error {

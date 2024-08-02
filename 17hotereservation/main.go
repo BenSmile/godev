@@ -7,6 +7,7 @@ import (
 
 	"github.com/bensmile/hotel-reservation/api"
 	"github.com/bensmile/hotel-reservation/db"
+	"github.com/bensmile/hotel-reservation/middleware"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -42,8 +43,9 @@ func main() {
 			Room:  roomStore,
 		}
 		hotelHandler = api.NewHotelHandler(&store)
+		authHandler  = api.NewAuthHandler(userStore)
 		app          = fiber.New(config)
-		apiV1        = app.Group("/api/v1")
+		apiV1        = app.Group("/api/v1", middleware.JWTAuth)
 	)
 
 	// users
@@ -59,12 +61,14 @@ func main() {
 	apiV1.Get("hotels/:id", hotelHandler.HandleGetHotelById)
 
 	app.Get("/", handleHome)
+	app.Post("/api/auth", authHandler.HandleLogin)
+
 	app.Listen(*listenAddr)
 
 }
 
 func handleHome(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{
-		"message": "Running...",
+		"message": "Running....",
 	})
 }

@@ -1,0 +1,12 @@
+# air.toml
+
+[build]
+bin = "bin/api"
+cmd = "go build -o bin/api"
+include_ext = ["go", "tmpl", "html"]
+exclude_dir = ["vendor"]
+exclude_file = ["air.toml", "README.md"]
+follow_symlink = true
+force_polling = false
+polling_interval = 500
+ignore = [".git", "bin", "scripts"]
