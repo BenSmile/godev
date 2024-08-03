@@ -2,10 +2,14 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"time"
 
 	"github.com/bensmile/hotel-reservation/db"
+	"github.com/bensmile/hotel-reservation/types"
 	"github.com/gofiber/fiber/v2"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
@@ -18,30 +22,56 @@ func NewAuthHandler(userStore db.UserStore) *AuthHandler {
 	}
 }
 
-type AuthParams struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
-	var authParams AuthParams
+	var authParams types.AuthParams
 
 	if err := c.BodyParser(&authParams); err != nil {
-		return err
+		// return err
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"message": "invalid credentials",
+		})
 	}
 
 	user, err := h.userStore.GetUserByEmail(c.Context(), authParams.Email)
 	if err != nil {
-		return fmt.Errorf("invalid credentials")
+		// return fmt.Errorf("invalid credentials")
+		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"message": "invalid credentials",
+		})
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(authParams.Password))
+	if !types.IsValidPassword(user.Password, authParams.Password) {
+		// return fmt.Errorf("invalid credentials")
+		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"message": "invalid credentials",
+		})
+
+	}
+
+	return c.JSON(types.AuthResponse{
+		User:  user,
+		Token: makeClaimsFromuser(user),
+	})
+
+}
+
+func makeClaimsFromuser(user *types.User) string {
+	now := time.Now()
+	expiredAt := now.Add(time.Hour * 1)
+	claims := jwt.MapClaims{
+		"userID":    user.ID,
+		"email":     user.Email,
+		"expiredAt": expiredAt,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secret := os.Getenv("JWT_SECRET")
+	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		return fmt.Errorf("invalid credentials")
+		fmt.Println("failed to sign token with secret : ", err)
 	}
-
-	fmt.Printf("authenticated -> : %+v\n", user)
-
-	return nil
+	return tokenString
 }

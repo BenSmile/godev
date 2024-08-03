@@ -80,6 +80,10 @@ func isValidEmail(email string) bool {
 	return re.MatchString(email)
 }
 
+func IsValidPassword(hashedPwd, pwd string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPwd), []byte(pwd)) == nil
+}
+
 func NewUserFromParams(params CreateUserParams) (*User, error) {
 	encryptedPwd, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
 	if err != nil {
