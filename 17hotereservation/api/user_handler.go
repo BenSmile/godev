@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/bensmile/hotel-reservation/db"
 	"github.com/bensmile/hotel-reservation/types"
@@ -36,7 +37,7 @@ func (h *UserHandler) HandlerDeleteuser(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(map[string]string{
+	return c.JSON(fiber.Map{
 		"deleted": id,
 	})
 }
@@ -73,7 +74,7 @@ func (h *UserHandler) HandlerUpdateUser(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(map[string]string{
+	return c.JSON(fiber.Map{
 		"updated": id,
 	})
 }
@@ -86,9 +87,10 @@ func (h *UserHandler) HandlerGetUserByID(c *fiber.Ctx) error {
 	user, err := h.userStore.GetUserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(map[string]string{
-				"message": "item not found for the given id",
-			})
+			return c.Status(http.StatusBadRequest).JSON(
+				fiber.Map{
+					"message": "item not found for the given id"},
+			)
 		}
 		return err
 	}

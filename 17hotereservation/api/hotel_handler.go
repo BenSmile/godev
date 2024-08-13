@@ -73,7 +73,7 @@ func (h *HotelHandler) HandleGetHotelById(c *fiber.Ctx) error {
 
 	if err != nil {
 		return err
-		// return c.JSON(map[string]string{
+		// return c.JSON(fiber.Map{
 		// 	"message": err.Error(),
 		// })
 	}

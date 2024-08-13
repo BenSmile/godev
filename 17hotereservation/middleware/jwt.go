@@ -6,26 +6,31 @@ import (
 	"os"
 	"time"
 
+	"github.com/bensmile/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTAuth(c *fiber.Ctx) error {
+func JWTAuth(userStore db.UserStore) fiber.Handler {
+	return func(c *fiber.Ctx) error {
 
-	token, ok := c.GetReqHeaders()["X-Api-Token"]
-	if !ok {
-		return c.Status(401).SendString("unauthorized")
+		token, ok := c.GetReqHeaders()["X-Api-Token"]
+		if !ok {
+			return c.Status(401).JSON(fiber.Map{"message": "unauthorized"})
+		}
+
+		claims, err := validateToken(token[0])
+
+		if err != nil {
+			return c.Status(401).JSON(fiber.Map{"message": "unauthorized"})
+		}
+
+		userID := claims["userID"].(string)
+
+		c.Context().SetUserValue("user", userID)
+
+		return c.Next()
 	}
-
-	claims, err := validateToken(token[0])
-
-	if err != nil {
-		return c.Status(401).SendString("unauthorized")
-	}
-
-	fmt.Printf("claims ->  %+v", claims)
-
-	return c.Next()
 }
 
 func validateToken(tokenString string) (jwt.MapClaims, error) {
@@ -53,8 +58,6 @@ func validateToken(tokenString string) (jwt.MapClaims, error) {
 		fmt.Println(err)
 	}
 
-	fmt.Println(claims["userID"], claims["email"], claims["expiredAt"])
-
 	// expiredAtFloat, ok := claims["expiredAt"].(float64)
 	expiredAtStr, ok := claims["expiredAt"].(string)
 	if !ok {
@@ -71,7 +74,6 @@ func validateToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	now := time.Now()
-	fmt.Println("now : ", now, "expired : ", expiredAt)
 
 	if expiredAt.Before(now) {
 		return nil, fmt.Errorf("token expired")

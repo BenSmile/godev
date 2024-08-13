@@ -28,7 +28,7 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&authParams); err != nil {
 		// return err
-		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})
 	}
@@ -37,7 +37,7 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	if err != nil {
 		// return fmt.Errorf("invalid credentials")
 		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
-		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})
 	}
@@ -45,7 +45,7 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	if !types.IsValidPassword(user.Password, authParams.Password) {
 		// return fmt.Errorf("invalid credentials")
 		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
-		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})
 
@@ -60,7 +60,7 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
 func makeClaimsFromuser(user *types.User) string {
 	now := time.Now()
-	expiredAt := now.Add(time.Hour * 1)
+	expiredAt := now.Add(time.Hour * 24)
 	claims := jwt.MapClaims{
 		"userID":    user.ID,
 		"email":     user.Email,

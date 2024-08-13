@@ -105,7 +105,7 @@ func TestAuthWithWrongPasswordFailure(t *testing.T) {
 		t.Fatalf("expected status of 401 bug got %d", resp.StatusCode)
 	}
 
-	var authResp map[string]string
+	var authResp fiber.Map
 
 	if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
 		t.Fatalf("expected the jwt token to be present in the auth response")

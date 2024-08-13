@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -56,8 +57,8 @@ type User struct {
 	Password  string             `json:"-" bson:"password"`
 }
 
-func (params CreateUserParams) Validate() map[string]string {
-	errors := map[string]string{}
+func (params CreateUserParams) Validate() fiber.Map {
+	errors := fiber.Map{}
 	if len(params.FirstName) < minFirstNameLen {
 		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
 	}

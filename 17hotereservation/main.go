@@ -15,7 +15,7 @@ import (
 
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
-		return c.JSON(map[string]string{
+		return c.JSON(fiber.Map{
 			"message": err.Error(),
 		})
 	},
@@ -44,8 +44,9 @@ func main() {
 		}
 		hotelHandler = api.NewHotelHandler(&store)
 		authHandler  = api.NewAuthHandler(userStore)
+		roomHandler  = api.NewRoomHandler(&store)
 		app          = fiber.New(config)
-		apiV1        = app.Group("/api/v1", middleware.JWTAuth)
+		apiV1        = app.Group("/api/v1", middleware.JWTAuth(userStore))
 	)
 
 	// users
@@ -60,6 +61,9 @@ func main() {
 	apiV1.Get("hotels/:id/rooms", hotelHandler.HandleGetRoomByHotel)
 	apiV1.Get("hotels/:id", hotelHandler.HandleGetHotelById)
 
+	// booking
+	apiV1.Post("rooms/:id/book", roomHandler.HandleBookRoom)
+
 	app.Get("/", handleHome)
 	app.Post("/api/auth", authHandler.HandleLogin)
 
@@ -68,7 +72,7 @@ func main() {
 }
 
 func handleHome(c *fiber.Ctx) error {
-	return c.JSON(map[string]string{
+	return c.JSON(fiber.Map{
 		"message": "Running....",
 	})
 }

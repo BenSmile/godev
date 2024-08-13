@@ -43,6 +43,7 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]*types.
 
 	return rooms, nil
 }
+
 func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*types.Room, error) {
 	resp, err := s.collection.InsertOne(ctx, room)
 	if err != nil {
