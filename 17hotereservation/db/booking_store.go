@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bensmile/hotel-reservation/types"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -14,6 +15,21 @@ const (
 
 type BookingStore interface {
 	InsertBooking(context.Context, *types.Booking) (*types.Booking, error)
+	GetBookings(context.Context, bson.M) ([]types.Booking, error)
+}
+
+func (s *MongoBookingStore) GetBookings(ctx context.Context, filter bson.M) ([]types.Booking, error) {
+	curs, err := s.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var bookings []types.Booking
+
+	if err := curs.All(ctx, &bookings); err != nil {
+		return nil, err
+	}
+	return bookings, nil
 }
 
 func (s *MongoBookingStore) InsertBooking(ctx context.Context, booking *types.Booking) (*types.Booking, error) {
@@ -24,7 +40,6 @@ func (s *MongoBookingStore) InsertBooking(ctx context.Context, booking *types.Bo
 	}
 	booking.ID = res.InsertedID.(primitive.ObjectID)
 	return booking, nil
-
 }
 
 func NewMongoBookingStore(client *mongo.Client) *MongoBookingStore {

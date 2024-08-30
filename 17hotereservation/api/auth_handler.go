@@ -26,7 +26,6 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 	var authParams types.AuthParams
 
 	if err := c.BodyParser(&authParams); err != nil {
-		// return err
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})

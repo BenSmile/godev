@@ -14,10 +14,11 @@ type Room struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	BasePrice float64            `bson:"base_price" json:"basePrice"`
 	// small, normal, kingsize
-	Size    string             `bson:"size" json:"size"`
-	SeaSide bool               `bson:"sea_side" json:"seaSide"`
-	Price   float64            `bson:"price" json:"price"`
-	HotelID primitive.ObjectID `bson:"hotel_id" json:"hotelID"`
+	Size     string             `bson:"size" json:"size"`
+	SeaSide  bool               `bson:"sea_side" json:"seaSide"`
+	IsBooked bool               `bson:"is_booked" json:"isBooked"`
+	Price    float64            `bson:"price" json:"price"`
+	HotelID  primitive.ObjectID `bson:"hotel_id" json:"hotelID"`
 }
 
 type RoomType int
@@ -29,3 +30,9 @@ const (
 	SeaSideleRoomType
 	DeluxeRoomType
 )
+
+type UpdateRoomsParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+}
