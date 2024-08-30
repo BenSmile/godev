@@ -27,12 +27,12 @@ func validateBookingDates(fromDate, tillDate string) (time.Time, time.Time, erro
 
 	fmt.Println("date : ", fromDate)
 
-	from, err := time.Parse(DATE_FORMAT, fromDate+" 00:00:00")
+	from, err := time.Parse(DATE_FORMAT, fmt.Sprintf("%s 00:00:00", fromDate))
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("invalid fromDate format, expected yyyy-MM-dd")
 	}
 
-	till, err := time.Parse(DATE_FORMAT, tillDate+" 00:00:00")
+	till, err := time.Parse(DATE_FORMAT, fmt.Sprintf("%s 00:00:00", tillDate))
 	if err != nil {
 		return time.Time{}, time.Time{}, fmt.Errorf("invalid tillDate format, expected yyyy-MM-dd")
 	}
@@ -89,6 +89,9 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		TillDate:        to,
 		NumberOfPersons: bookingRoomBody.NumberOfPersons,
 	}
+
+	fmt.Println("BookingStore:", h.store.Booking)
+	fmt.Println("Booking:", booking)
 
 	insertedBooking, err := h.store.Booking.InsertBooking(c.Context(), &booking)
 	if err != nil {

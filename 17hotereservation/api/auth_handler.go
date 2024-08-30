@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/bensmile/hotel-reservation/db"
@@ -35,20 +34,15 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
 	user, err := h.userStore.GetUserByEmail(c.Context(), authParams.Email)
 	if err != nil {
-		// return fmt.Errorf("invalid credentials")
-		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})
 	}
 
 	if !types.IsValidPassword(user.Password, authParams.Password) {
-		// return fmt.Errorf("invalid credentials")
-		// return c.Status(http.StatusUnauthorized).SendString("invalid credentials")
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"message": "invalid credentials",
 		})
-
 	}
 
 	return c.JSON(types.AuthResponse{
@@ -62,13 +56,16 @@ func makeClaimsFromuser(user *types.User) string {
 	now := time.Now()
 	expiredAt := now.Add(time.Hour * 24)
 	claims := jwt.MapClaims{
-		"userID":    user.ID,
-		"email":     user.Email,
-		"expiredAt": expiredAt,
+		"userID":      user.ID,
+		"email":       user.Email,
+		"expiredAt":   expiredAt,
+		"permissions": []string{"user.create", "user.readAll"},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secret := os.Getenv("JWT_SECRET")
+	secret := "EgZjaHJvbWUqCQgBEC4YChiABDIGCAAQRRg5MgkIARAuGAoYgAQyCQgCEAAYChiABDIJCAMQABgKGIAEMgkIBBAAGAoYgAQyCQgFEAAYChiABDIJCA"
+	//secret := os.Getenv("JWT_SECRET")
+	fmt.Println(secret)
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		fmt.Println("failed to sign token with secret : ", err)

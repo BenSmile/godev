@@ -3,15 +3,13 @@ package middleware
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
-	"github.com/bensmile/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTAuth(userStore db.UserStore) fiber.Handler {
+func JWTAuth() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
 		token, ok := c.GetReqHeaders()["X-Api-Token"]
@@ -40,7 +38,9 @@ func validateToken(tokenString string) (jwt.MapClaims, error) {
 			fmt.Println("invalid signing method", token.Header["alg"])
 			return nil, fmt.Errorf("unauthorized")
 		}
-		secret := os.Getenv("JWT_SECRET")
+		//secret := os.Getenv("JWT_SECRET")
+		secret := "EgZjaHJvbWUqCQgBEC4YChiABDIGCAAQRRg5MgkIARAuGAoYgAQyCQgCEAAYChiABDIJCAMQABgKGIAEMgkIBBAAGAoYgAQyCQgFEAAYChiABDIJCA"
+
 		return []byte(secret), nil
 	})
 
