@@ -5,11 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/bensmile/hotel-reservation/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTAuth() fiber.Handler {
+func JWTAuth(userStore db.UserStore) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
 		token, ok := c.GetReqHeaders()["X-Api-Token"]
@@ -25,7 +26,13 @@ func JWTAuth() fiber.Handler {
 
 		userID := claims["userID"].(string)
 
-		c.Context().SetUserValue("user", userID)
+		user, err := userStore.GetUserByID(c.Context(), userID)
+
+		if err != nil {
+			return c.Status(401).JSON(fiber.Map{"message": "unauthorized"})
+		}
+
+		c.Context().SetUserValue("user", user)
 
 		return c.Next()
 	}

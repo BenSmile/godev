@@ -22,6 +22,7 @@ type CreateUserParams struct {
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
+	IsAdmin   bool   `json:"isAdmin"`
 }
 
 type UpdateUserParams struct {
@@ -55,6 +56,7 @@ type User struct {
 	LasttName string             `json:"lastName" bson:"lastName"`
 	Email     string             `json:"email" bson:"email"`
 	Password  string             `json:"-" bson:"password"`
+	IsAdmin   bool               `json:"isAdmin" bson:"is_admin"`
 }
 
 func (params CreateUserParams) Validate() fiber.Map {
@@ -95,5 +97,6 @@ func NewUserFromParams(params CreateUserParams) (*User, error) {
 		LasttName: params.LastName,
 		Email:     params.Email,
 		Password:  string(encryptedPwd),
+		IsAdmin:   params.IsAdmin,
 	}, nil
 }

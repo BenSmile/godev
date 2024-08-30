@@ -16,7 +16,7 @@ type Room struct {
 	// small, normal, kingsize
 	Size     string             `bson:"size" json:"size"`
 	SeaSide  bool               `bson:"sea_side" json:"seaSide"`
-	IsBooked bool               `bson:"is_booked" json:"isBooked"`
+	IsBooked bool               `bson:"-" json:"isBooked"`
 	Price    float64            `bson:"price" json:"price"`
 	HotelID  primitive.ObjectID `bson:"hotel_id" json:"hotelID"`
 }

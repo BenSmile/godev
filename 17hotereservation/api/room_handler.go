@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	// DATE_FORMAT = time.RFC3339
 	DATE_FORMAT = "2006-01-02 15:04:05"
 )
 
@@ -66,6 +65,14 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 	}
 }
 
+func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
+	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
+	if err != nil {
+		return err
+	}
+	return c.Status(http.StatusOK).JSON(rooms)
+}
+
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 
 	var bookingRoomBody BookingRoomReq
@@ -84,7 +91,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	room, err := h.store.Room.GetRoomById(c.Context(), roomIdStr)
 
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": fmt.Sprintf("room not found for the given id : %s", roomIdStr)})
 	}
 
 	roomAvailable, _ := h.isRoomAvailable(c.Context(), room.ID, from, to)
@@ -93,21 +100,15 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "room already booked"})
 	}
 
-	userID, ok := c.Context().UserValue("user").(string)
+	user, ok := c.Context().UserValue("user").(*types.User)
 
 	if !ok {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "invalid user id"})
-	}
-
-	userOID, err := primitive.ObjectIDFromHex(userID)
-
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "invalid user id"})
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"message": "unauthorized"})
 	}
 
 	booking := types.Booking{
 		RoomID:          room.ID,
-		UserID:          userOID,
+		UserID:          user.ID,
 		FromDate:        from,
 		TillDate:        to,
 		NumberOfPersons: bookingRoomBody.NumberOfPersons,

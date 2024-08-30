@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net/http"
 
 	"github.com/bensmile/hotel-reservation/api"
 	"github.com/bensmile/hotel-reservation/db"
@@ -15,7 +16,7 @@ import (
 
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
-		return c.JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
 		})
 	},
@@ -44,11 +45,13 @@ func main() {
 			Room:    roomStore,
 			Booking: bookingStore,
 		}
-		hotelHandler = api.NewHotelHandler(&store)
-		authHandler  = api.NewAuthHandler(userStore)
-		roomHandler  = api.NewRoomHandler(&store)
-		app          = fiber.New(config)
-		apiV1        = app.Group("/api/v1", middleware.JWTAuth())
+		hotelHandler   = api.NewHotelHandler(&store)
+		bookingHandler = api.NewBookingHandler(&store)
+		authHandler    = api.NewAuthHandler(userStore)
+		roomHandler    = api.NewRoomHandler(&store)
+		app            = fiber.New(config)
+		apiV1          = app.Group("/api/v1", middleware.JWTAuth(userStore))
+		admin          = apiV1.Group("/admin", middleware.OnlyAdmin)
 	)
 
 	// users
@@ -63,8 +66,15 @@ func main() {
 	apiV1.Get("hotels/:id/rooms", hotelHandler.HandleGetRoomByHotel)
 	apiV1.Get("hotels/:id", hotelHandler.HandleGetHotelById)
 
-	// booking
+	// rooms
+	apiV1.Get("rooms", roomHandler.HandleGetRooms)
 	apiV1.Post("rooms/:id/book", roomHandler.HandleBookRoom)
+
+	// booking
+	admin.Get("bookings", bookingHandler.HandleGetBookings)
+	apiV1.Put("bookings/:id/cancel", bookingHandler.HandleCancelBooking)
+	admin.Get("bookings/:id", bookingHandler.HandleGetBookingById)
+	apiV1.Get("bookings", bookingHandler.HandleGetBookingsForUser)
 
 	app.Get("/", handleHome)
 	app.Post("/api/auth", authHandler.HandleLogin)
