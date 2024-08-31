@@ -51,7 +51,8 @@ func main() {
 		roomHandler    = api.NewRoomHandler(&store)
 		app            = fiber.New(config)
 		apiV1          = app.Group("/api/v1", middleware.JWTAuth(userStore))
-		admin          = apiV1.Group("/admin", middleware.OnlyAdmin)
+		// admin          = apiV1.Group("/admin", middleware.OnlyAdmin)
+		admin = apiV1.Group("/admin")
 	)
 
 	// users

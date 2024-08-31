@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bensmile/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +18,7 @@ type BookingStore interface {
 	InsertBooking(context.Context, *types.Booking) (*types.Booking, error)
 	GetBookings(context.Context, bson.M) ([]types.Booking, error)
 	GetBookingById(context.Context, string) (*types.Booking, error)
+	UpdateBooking(context.Context, string, bson.M) (*types.Booking, error)
 }
 
 func (s *MongoBookingStore) GetBookings(ctx context.Context, filter bson.M) ([]types.Booking, error) {
@@ -65,4 +67,31 @@ func NewMongoBookingStore(client *mongo.Client) *MongoBookingStore {
 type MongoBookingStore struct {
 	client     *mongo.Client
 	collection *mongo.Collection
+}
+
+func (s *MongoBookingStore) UpdateBooking(ctx context.Context, id string, values bson.M) (*types.Booking, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ObjectID: %w", err)
+	}
+
+	filter := bson.D{{Key: "_id", Value: oid}}
+	update := bson.D{{Key: "$set", Value: values}}
+
+	result, err := s.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update booking: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return nil, fmt.Errorf("booking with ID %s not found", id)
+	}
+
+	var updatedBooking types.Booking
+	err = s.collection.FindOne(ctx, filter).Decode(&updatedBooking)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch updated booking: %w", err)
+	}
+
+	return &updatedBooking, nil
 }

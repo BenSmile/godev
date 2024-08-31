@@ -46,12 +46,12 @@ func (h *AuthHandler) HandleLogin(c *fiber.Ctx) error {
 
 	return c.JSON(types.AuthResponse{
 		User:  user,
-		Token: makeClaimsFromuser(user),
+		Token: MakeClaimsFromuser(user),
 	})
 
 }
 
-func makeClaimsFromuser(user *types.User) string {
+func MakeClaimsFromuser(user *types.User) string {
 	now := time.Now()
 	expiredAt := now.Add(time.Hour * 24)
 	claims := jwt.MapClaims{
